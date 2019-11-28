@@ -1,6 +1,7 @@
 # zhaires.py
 A Python wrapper for the AireS and ZHAireS cosmic ray air shower simulation codes.
 
+[![Actions Status](https://github.com/rprechelt/zhaires.py/workflows/tests/badge.svg)](https://github.com/rprechelt/zhaires.py/actions)
 ![GitHub](https://img.shields.io/github/license/rprechelt/zhaires.py?logoColor=brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)
 
