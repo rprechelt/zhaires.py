@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 from os import path
-from zhaires import __version__
 
 # get the absolute path of this project
 here = path.abspath(path.dirname(__file__))
@@ -12,7 +11,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 # the standard setup info
 setup(
     name='zhaires',
-    version=__version__,
+    version="0.1.0",
     description='A pure Python wrapper for the AireS and ZHAireS cosmic ray air shower simulators.',
     long_description=long_description, 
     long_description_content_type='text/markdown',
