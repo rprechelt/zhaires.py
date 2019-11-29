@@ -2,6 +2,7 @@ import os
 import subprocess
 from shutil import which
 from typing import Tuple
+from . import run_directory
 
 
 class Task(object):
@@ -31,10 +32,6 @@ class Task(object):
            If True, echo all commands before they are run.
         """
 
-        # check that `program` exists
-        if not os.path.exists(program):
-            raise ValueError(f'Unable to find `{program}`.')
-
         # the program that we launch to control Aires
         aires = program if program else which('Aires')
 
@@ -42,6 +39,11 @@ class Task(object):
         if not aires:
             raise SystemError("Unable to find `Aires` executable. "
                               "Ensure AIRES_DIR/bin is on your PATH.")
+
+        # check that `program` exists if it was provided
+        if program:
+            if not os.path.exists(program):
+                raise ValueError(f'Unable to find `{program}`.')        
 
         # save the verbose flag
         self.verbose = verbose        
@@ -52,8 +54,11 @@ class Task(object):
         # try and load commands from a file
         self.load_from_file(cmdfile)
 
+        # and set the run directory
+        self.file_directory(run_directory, files = 'All')        
+
         # create a Remark that this simulation was created by pyaires
-        self.remark('Task generated using pyaires.')
+        self.remark('Task generated using zhaires.py')
 
     def __exit__(self):
         """
@@ -63,6 +68,21 @@ class Task(object):
             sim.exit()
             self.process.terminate()
             self.process = None
+
+    def __call__(self, cmd: str) -> None:
+        """
+        Read and process an Aires command in a string.
+
+        Parameters
+        ----------
+        cmd: str
+            The Aires command to process
+
+        Returns
+        -------
+        None
+        """
+        self.read_cmd(cmd)
 
     def load_from_file(self, cmdfile: str) -> None:
         """
