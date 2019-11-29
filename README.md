@@ -11,6 +11,12 @@ Note: this package does not include a copy of AireS. You will need to download a
 
 ### Installation
 
+Before installing `zhaires.py`, you will need to set the `AIRES_RUN_DIR` environment variable telling `zhaires.py` where to store the Aires/ZHAireS output files. Each simulated shower is created in its own directory under `AIRES_RUN_DIR` with the name of the Aires task.
+
+    $ export AIRES_RUN_DIR=<path to directory with decent storage capacity>
+	
+This should be added to your `.{bash,zsh,fish,tcsh,c}rc` file if you plan on regularly using `zhaires.py`.
+
 To install `zhaires.py`, you will need `git` and Python >= 3.6. All three should be available in the package manager of any modern OS. It is tested on macOS 10.14, ubuntu 18.04, ubuntu 16.04, Fedora 29, and Fedora 30.
 
 The below instructions are assuming that `python` refers to Python 3.\*. If `python` still refers to a decrepit Python 2.\*, please replace `python` with `python3` and `pip` with `pip3`.
