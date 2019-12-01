@@ -12,4 +12,4 @@ if not run_directory:
 
 # these modules may depend on run_directory
 from .aires import Task
-from .loader import load_waveforms
+from .loader import load_waveforms, load_properties
