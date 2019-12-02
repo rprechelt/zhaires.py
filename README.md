@@ -81,7 +81,7 @@ Before installing `zhaires.py`, you will need to set the `AIRES_RUN_DIR` environ
     
 This should be added to your `.{bash,zsh,fish,tcsh,c}rc` file if you plan on regularly using `zhaires.py`.
 
-To install `zhaires.py`, you will need `git` and Python >= 3.6. All three should be available in the package manager of any modern OS. It is tested on macOS 10.14, ubuntu 18.04, ubuntu 16.04, Fedora 29, and Fedora 30.
+To install `zhaires.py`, you will need `git`, Python >= 3.6, and any Fortran compiler. All three should be available in the package manager of any modern OS. It is tested on macOS 10.14, ubuntu 18.04, ubuntu 16.04, Fedora 29, and Fedora 30.
 
 The below instructions are assuming that `python` refers to Python 3.\*. If `python` still refers to a decrepit Python 2.\*, please replace `python` with `python3` and `pip` with `pip3`.
 
