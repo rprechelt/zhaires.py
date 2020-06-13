@@ -1,6 +1,7 @@
 import zhaires
 
-def test_zhaires():
+
+def test_zhaires() -> None:
     """
     Check that the version number is correct.
     """

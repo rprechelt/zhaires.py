@@ -1,8 +1,9 @@
 import os
 import subprocess
 from shutil import which
-from typing import Tuple
-from . import run_directory
+from typing import Optional, Tuple
+
+from .path import get_run_directory
 
 
 class Task(object):
@@ -16,12 +17,15 @@ class Task(object):
     """
 
     # the subprocess for Aire
-    process: subprocess.Popen = None
+    process: Optional[subprocess.Popen] = None
 
-    def __init__(self,
-                 program: str = None,
-                 cmdfile: str = None,
-                 verbose: bool = False):
+    def __init__(
+        self,
+        program: str = None,
+        cmdfile: str = None,
+        verbose: bool = False,
+        directory: str = get_run_directory(),
+    ):
         """
         Create a new Aires task.
 
@@ -33,20 +37,26 @@ class Task(object):
            The path to a file containing default commands to run.
         verbose: bool
            If True, echo all commands before they are run.
+        directory: str
+           The directory to save the simulation.
+           If None, use the current directory.
         """
 
         # the program that we launch to control Aires
-        aires = program if program else which('Aires')
+        aires = program if program else which("Aires")
 
         # if `aires` is None, we were not able to find Aires
         if not aires:
-            raise SystemError("Unable to find `Aires` executable. "
-                              "Ensure AIRES_DIR/bin is on your PATH.")
+            raise SystemError(
+                "Unable to find `Aires` executable. "
+                "Ensure AIRES_DIR/bin is on your PATH or "
+                "pass an explicit `program` argument."
+            )
 
         # check that `program` exists if it was provided
         if program:
             if not os.path.exists(program):
-                raise ValueError(f'Unable to find `{program}`.')
+                raise ValueError(f"Unable to find `{program}`.")
 
         # save the verbose flag
         self.verbose = verbose
@@ -57,13 +67,16 @@ class Task(object):
         # try and load commands from a file
         self.load_from_file(cmdfile)
 
+        # save the directory
+        self.directory = directory
+
         # and set the run directory
-        self.file_directory(run_directory, files='All')
+        self.file_directory(self.directory, files="All")
 
         # create a Remark that this simulation was created by pyaires
-        self.remark('Task generated using zhaires.py')
+        self.remark("Task generated using zhaires.py")
 
-    def __exit__(self):
+    def __exit__(self) -> None:
         """
         Ensure that the aires process is closed upon exit.
         """
@@ -87,7 +100,7 @@ class Task(object):
         """
         self.read_cmd(cmd)
 
-    def load_from_file(self, cmdfile: str) -> None:
+    def load_from_file(self, cmdfile: Optional[str]) -> None:
         """
         Load an Aires command/input file by filename.
 
@@ -104,7 +117,7 @@ class Task(object):
         # check that we actually got given a file
         if cmdfile is not None:
             # try and open the file
-            with open(cmdfile, 'r') as fp:
+            with open(cmdfile, "r") as fp:
 
                 # loop over all the lines in the file
                 for line in fp:
@@ -126,8 +139,10 @@ class Task(object):
 
         # check that we have a valid sessions
         if not self.process:
-            msg = ("Simulation is finished/exited. "
-                   "Unable to process additional commands.")
+            msg = (
+                "Simulation is finished/exited. "
+                "Unable to process additional commands."
+            )
             raise ValueError(msg)
 
         # if verbose, print the cmd before we run it
@@ -135,14 +150,17 @@ class Task(object):
             print(cmd)
 
         # add a newline if it doesn't already exist
-        if cmd[-1] != '\n':
-            cmd += '\n'
+        if cmd[-1] != "\n":
+            cmd += "\n"
 
         # convert it to bytes and write it to stdin
-        self.process.stdin.write(cmd.encode())
+        if self.process is not None:
+            self.process.stdin.write(cmd.encode())  # type: ignore
 
-        # and flush stdin to the Aires subprocess
-        self.process.stdin.flush()
+            # and flush stdin to the Aires subprocess
+            self.process.stdin.flush()  # type: ignore
+        else:
+            raise ValueError(f"Attempt to write command with NULL process!")
 
     def run(self) -> None:
         """
@@ -152,7 +170,10 @@ class Task(object):
         -------
         None
         """
-        self.process.communicate()
+        if self.process is not None:
+            self.process.communicate()  # type: ignore
+        else:
+            raise ValueError(f"Attempting to start a simulation with a NULL process!")
 
     def exit(self) -> None:
         """
@@ -163,10 +184,11 @@ class Task(object):
         None
         """
         # write the exit command
-        self.read_cmd('Exit')
+        self.read_cmd("Exit")
 
         # and close down the process
-        self.process.terminate()
+        if self.process is not None:
+            self.process.terminate()  # type: ignore
         self.process = None
 
     #####################################################
@@ -179,7 +201,7 @@ class Task(object):
 
         Example: self.task_name('TestSim')
         """
-        self.read_cmd(f'TaskName {name}')
+        self.read_cmd(f"TaskName {name}")
 
     def total_showers(self, nshowers: int) -> None:
         """
@@ -187,7 +209,7 @@ class Task(object):
 
         Example: self.total_showers(1)
         """
-        self.read_cmd(f'TotalShowers {int(nshowers)}')
+        self.read_cmd(f"TotalShowers {int(nshowers)}")
 
     def showers_per_run(self, nshowers: int) -> None:
         """
@@ -195,7 +217,7 @@ class Task(object):
 
         Example: self.showers_per_run(1)
         """
-        self.read_cmd(f'ShowersPerRun {int(nshowers)}')
+        self.read_cmd(f"ShowersPerRun {int(nshowers)}")
 
     def runs_per_process(self, runs: int) -> None:
         """
@@ -203,16 +225,16 @@ class Task(object):
 
         Example: self.runs_per_process(1)
         """
-        self.read_cmd(f'RunsPerProcess {int(runs)}')
+        self.read_cmd(f"RunsPerProcess {int(runs)}")
 
-    def max_cpu_time_per_run(self, time: float, unit: str = 'hr') -> None:
+    def max_cpu_time_per_run(self, time: float, unit: str = "hr") -> None:
         """
         Set the maximum cpu time per run. This defaults to hours but setting
         `unit` will override.
 
         Example: self.max_cpu_time_per_run(1)
         """
-        self.read_cmd(f'MaxCpuTimePerRun {float(time)} {unit}')
+        self.read_cmd(f"MaxCpuTimePerRun {float(time)} {unit}")
 
     def primary_particle(self, particle: str) -> None:
         """
@@ -220,9 +242,9 @@ class Task(object):
 
         Example: self.primary_particle('proton')
         """
-        self.read_cmd(f'PrimaryParticle {particle}')
+        self.read_cmd(f"PrimaryParticle {particle}")
 
-    def primary_energy(self, energy: float, unit: str = 'eV') -> None:
+    def primary_energy(self, energy: float, unit: str = "eV") -> None:
         """
         Set the primary particle energy. If not specified,
         the unit is eV however the `unit` kwarg overrides.
@@ -230,7 +252,7 @@ class Task(object):
         Example: self.primary_energy(1e16)
         Example: self.primary_energy(10, 'PeV')
         """
-        self.read_cmd(f'PrimaryEnergy {float(energy)} {unit}')
+        self.read_cmd(f"PrimaryEnergy {float(energy)} {unit}")
 
     def primary_zenith(self, zenith: float) -> None:
         """
@@ -238,11 +260,9 @@ class Task(object):
 
         Example: self.primary_zenith(80)
         """
-        self.read_cmd(f'PrimaryZenAngle {float(zenith)} deg')
+        self.read_cmd(f"PrimaryZenAngle {float(zenith)} deg")
 
-    def primary_azimuth(self,
-                        azimuth: float,
-                        geographic: bool = False) -> None:
+    def primary_azimuth(self, azimuth: float, geographic: bool = False) -> None:
         """
         Set the primary particle azimuth angle in degrees.
         Defaults to magnetic azimuth angle but if `geographic == True`,
@@ -252,28 +272,28 @@ class Task(object):
         Example: self.primary_azimuth(48., geographic=True)
         """
         # pick the suffix string
-        suffix = 'Geographic' if geographic else ''
+        suffix = "Geographic" if geographic else ""
 
         # and then write the command
-        self.read_cmd(f'PrimaryAzimAngle {float(azimuth)} deg {suffix}')
+        self.read_cmd(f"PrimaryAzimAngle {float(azimuth)} deg {suffix}")
 
-    def injection_altitude(self, altitude: float, unit: str = 'km') -> None:
+    def injection_altitude(self, altitude: float, unit: str = "km") -> None:
         """
         Set the primary particle injection altitude. Defaults to 'km'
         but setting `unit` will override.
 
         Example: self.injection_altitude(120, 'km')
         """
-        self.read_cmd(f'InjectionAltitude {float(altitude)} {unit}')
+        self.read_cmd(f"InjectionAltitude {float(altitude)} {unit}")
 
-    def ground_altitude(self, altitude: float, unit: str = 'km') -> None:
+    def ground_altitude(self, altitude: float, unit: str = "km") -> None:
         """
         Set the ground altitude. Defaults to 'km' but setting
         `unit` will override.
 
         Example: self.ground_altitude(120, 'km')
         """
-        self.read_cmd(f'GroundAltitude {float(altitude)} {unit}')
+        self.read_cmd(f"GroundAltitude {float(altitude)} {unit}")
 
     def site(self, site: str) -> None:
         """
@@ -281,24 +301,20 @@ class Task(object):
 
         Example: self.site('SouthPole')
         """
-        self.read_cmd(f'Site {site}')
+        self.read_cmd(f"Site {site}")
 
-    def add_site(self,
-                 name: str,
-                 lat: float,
-                 lon: float,
-                 alt: float,
-                 unit: str = 'm') -> None:
+    def add_site(
+        self, name: str, lat: float, lon: float, alt: float, unit: str = "m"
+    ) -> None:
         """
         Create a new observing site given a `name`, `lat`/`lon` in degrees, and
         altitude in `m`. Settings unit overrides the units for altitude.
 
         Example: self.site('TestSite', 32.5, 84.5, 1200, 'm')
         """
-        self.read_cmd(f'AddSite {name} {lat} deg {lon} deg {alt} {unit}')
+        self.read_cmd(f"AddSite {name} {lat} deg {lon} deg {alt} {unit}")
 
-    def geomagnetic_field(self, strength: float, incl: float,
-                          dec: float) -> None:
+    def geomagnetic_field(self, strength: float, incl: float, dec: float) -> None:
         """
         Set the geomagnetic field at the event location.
 
@@ -311,12 +327,11 @@ class Task(object):
         declination: float
             The geomagnetic declination angle in degrees.
         """
-        self.read_cmd(f'GeomagneticField {strength} nT {incl} deg {dec} deg')
+        self.read_cmd(f"GeomagneticField {strength} nT {incl} deg {dec} deg")
 
-    def thinning_energy(self,
-                        energy: float,
-                        unit: str = 'eV',
-                        relative: bool = False) -> None:
+    def thinning_energy(
+        self, energy: float, unit: str = "eV", relative: bool = False
+    ) -> None:
         """
         Set the thinning energy in eV. If relative is True, then treat
         `energy` as (thinning_energy/primary_energy).
@@ -327,9 +342,9 @@ class Task(object):
         """
         # if this is a relative thinning energy
         if relative:
-            self.read_cmd(f'ThinningEnergy {float(energy)} Relative')
+            self.read_cmd(f"ThinningEnergy {float(energy)} Relative")
         else:  # otherwise it is an absolute energy
-            self.read_cmd(f'ThinningEnergy {float(energy)} {unit}')
+            self.read_cmd(f"ThinningEnergy {float(energy)} {unit}")
 
     def thinning_w_factor(self, factor: float) -> None:
         """
@@ -337,7 +352,7 @@ class Task(object):
 
         Example: self.thinning_w_factor(0.06)
         """
-        self.read_cmd(f'ThinningWFactor {float(factor)}')
+        self.read_cmd(f"ThinningWFactor {float(factor)}")
 
     def date(self, date: float) -> None:
         """
@@ -353,7 +368,7 @@ class Task(object):
         -------
         None
         """
-        self.read_cmd(f'Date {date}')
+        self.read_cmd(f"Date {date}")
 
     def per_shower_data(self, data: str) -> None:
         """
@@ -365,12 +380,11 @@ class Task(object):
         Example: self.per_shower_data('None')
         """
         # check it is a valid value
-        if data not in ['Full', 'Brief', 'None']:
-            raise ValueError(
-                "`per_shower_data` only accepts 'Full', 'Brief', 'None'.")
+        if data not in ["Full", "Brief", "None"]:
+            raise ValueError("`per_shower_data` only accepts 'Full', 'Brief', 'None'.")
 
         # otherwise pass it to Aires
-        self.read_cmd(f'PerShowerData {data}')
+        self.read_cmd(f"PerShowerData {data}")
 
     def zhaires(self, enabled: bool = True) -> None:
         """
@@ -380,10 +394,10 @@ class Task(object):
         Example: self.zhaires(False)
         """
         # construct the enable disable disable
-        status = 'On' if enabled else 'Off'
+        status = "On" if enabled else "Off"
 
         # and pass it to Aires
-        self.read_cmd(f'ZHAireS {status}')
+        self.read_cmd(f"ZHAireS {status}")
 
     def fresnel_time(self, enabled: bool = True) -> None:
         """
@@ -393,12 +407,12 @@ class Task(object):
         Example: self.fresnel_time(False)
         """
         # construct the enable disable disable
-        status = 'On' if enabled else 'Off'
+        status = "On" if enabled else "Off"
 
         # and pass it to Aires
-        self.read_cmd(f'FresnelTime {status}')
+        self.read_cmd(f"FresnelTime {status}")
 
-    def time_domain_bin(self, time: float, unit: str = 'ns') -> None:
+    def time_domain_bin(self, time: float, unit: str = "ns") -> None:
         """
         Sets the time-domain bin size in ZHAireS. This defaults
         to 'ns' but setting `unit` will override.
@@ -407,9 +421,9 @@ class Task(object):
         Example: self.time_domain_bin(0.5, 'ps')
         """
         # and pass it to Aires
-        self.read_cmd(f'TimeDomainBin {float(time)} {unit}')
+        self.read_cmd(f"TimeDomainBin {float(time)} {unit}")
 
-    def add_antenna(self, x: float, y: float, z: float = 0.) -> None:
+    def add_antenna(self, x: float, y: float, z: float = 0.0) -> None:
         """
         Creates an antenna at (x, y, z) in m w.r.t coordinate origin.
         If not given, `z` defaults to ground level.
@@ -418,26 +432,31 @@ class Task(object):
         Example: self.add_antenna(320, 5700, 1200
         """
         # and pass it to Aires
-        self.read_cmd(f'AddAntenna {float(x)} {float(y)} {float(z)}')
+        self.read_cmd(f"AddAntenna {float(x)} {float(y)} {float(z)}")
 
-    def add_line_antenna(self, start: Tuple[float, float, float],
-                         end: Tuple[float, float, float], nant: int) -> None:
+    def add_line_antenna(
+        self,
+        start: Tuple[float, float, float],
+        end: Tuple[float, float, float],
+        nant: int,
+    ) -> None:
         """
         Create a line of `nant` between `start` and `end`.
 
         Example: self.add_line_antenna((0, 0, 0), (100, 1200, 0), 20)
         """
         # the start location string
-        startstr = f'{float(start[0])} {float(start[1])} {float(start[2])}'
+        startstr = f"{float(start[0])} {float(start[1])} {float(start[2])}"
 
         # the end location string
-        endstr = f'{float(end[0])} {float(end[1])} {float(end[2])}'
+        endstr = f"{float(end[0])} {float(end[1])} {float(end[2])}"
 
         # and pass it to Aires
-        self.read_cmd(f'AddAntenna Line {startstr} {endstr} {int(nant)}')
+        self.read_cmd(f"AddAntenna Line {startstr} {endstr} {int(nant)}")
 
-    def add_ring_antenna(self, origin: Tuple[float, float, float],
-                         radius: float, phi0: float, nant: int) -> None:
+    def add_ring_antenna(
+        self, origin: Tuple[float, float, float], radius: float, phi0: float, nant: int
+    ) -> None:
         """
         Create a ring of `nant` antennas on a circle of radius `radius` [m]
         centered at `origin` [m] starting at magnetic azimuth `phi0`
@@ -446,13 +465,13 @@ class Task(object):
         Example: self.add_ring_antenna((0, 0, 0), (100, 1200, 0), 20)
         """
         # the start location string
-        originstr = f'{float(origin[0])} {float(origin[1])} {float(origin[2])}'
+        originstr = f"{float(origin[0])} {float(origin[1])} {float(origin[2])}"
 
         # and construct the command
         cmd = f"{originstr} {float(radius)} {float(phi0)} {int(nant)}"
 
         # and pass it to Aires
-        self.read_cmd(f'AddAntenna Ring {cmd}')
+        self.read_cmd(f"AddAntenna Ring {cmd}")
 
     def delete_antennas(self) -> None:
         """
@@ -460,7 +479,7 @@ class Task(object):
 
         Example: self.delete_antennas()
         """
-        self.read_cmd('AddAntenna None')
+        self.read_cmd("AddAntenna None")
 
     def include_hadrons(self, enabled: bool = True) -> None:
         """
@@ -470,10 +489,10 @@ class Task(object):
         Example: self.include_hadrons(False) # turns OFF hadrons
         """
         # construct the status string
-        status = 'On' if enabled else 'Off'
+        status = "On" if enabled else "Off"
 
         # and pass it to Aires
-        self.read_cmd(f'IncludeHadrons {status}')
+        self.read_cmd(f"IncludeHadrons {status}")
 
     def random_seed(self, seed: float) -> None:
         """
@@ -481,16 +500,16 @@ class Task(object):
 
         Example: self.random_seed(0.1298004637)
         """
-        self.read_cmd(f'RandomSeed {float(seed)}')
+        self.read_cmd(f"RandomSeed {float(seed)}")
 
-    def file_directory(self, directory: str, files: str = 'All') -> None:
+    def file_directory(self, directory: str, files: str = "All") -> None:
         """
         Specify the directory for specific simulation files.
 
         Example: self.file_directory('test/')
         Example: self.file_directory('test/', files = 'All')
         """
-        self.read_cmd(f'FileDirectory {files} {directory}')
+        self.read_cmd(f"FileDirectory {files} {directory}")
 
     def summary(self, enabled: bool = True) -> None:
         """
@@ -500,10 +519,10 @@ class Task(object):
         Example: self.summary(False) # turns OFF summary file
         """
         # construct the status string
-        status = 'On' if enabled else 'Off'
+        status = "On" if enabled else "Off"
 
         # and pass it to Aires
-        self.read_cmd(f'Summary {status}')
+        self.read_cmd(f"Summary {status}")
 
     def remark(self, remark: str) -> None:
         """
@@ -511,4 +530,4 @@ class Task(object):
 
         Example: self.remark('Hello world')
         """
-        self.read_cmd(f'Remark {remark}')
+        self.read_cmd(f"Remark {remark}")
