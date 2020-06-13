@@ -1,8 +1,8 @@
 from os import path
 from setuptools import setup
 
-# the radiomorphing version
-__version__ = "0.0.1"
+# the zhaires version
+__version__ = "0.2.0"
 
 # get the absolute path of this project
 here = path.abspath(path.dirname(__file__))
