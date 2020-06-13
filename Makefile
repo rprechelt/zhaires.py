@@ -9,9 +9,9 @@
 PYTHON=`/usr/bin/which python3`
 
 # our testing targets
-.PHONY: tests flake black isort all
+.PHONY: tests flake black isort all clean
 
-all: mypy isort black flake tests
+all: mypy isort black flake tests clean
 
 tests:
 	${PYTHON} -m pytest --cov=zhaires tests
@@ -27,5 +27,10 @@ isort:
 
 mypy:
 	${PYTHON} -m mypy zhaires
+
+clean:
+	$(RM) Aires.status
+	$(RM) Aires.dirs
+
 
 # end
