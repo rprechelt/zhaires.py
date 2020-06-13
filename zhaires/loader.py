@@ -53,22 +53,22 @@ def load_waveforms(
     # the length of each signal - we overestimate
     length = int(np.ceil(raw.shape[1] / nantennas))
 
-    # create a numpy array with field names
+    # create the data to store the waveforms
     data = np.zeros(
         nantennas,
         dtype=[
-            ("energy", "float32", 1),
-            ("zenith", "float32", 1),
-            ("azimuth", "float32", 1),
-            ("lat", "float32", 1),
-            ("lon", "float32", 1),
-            ("ground", "float32", 1),
-            ("mag_str", "float32", 1),
-            ("mag_inc", "float32", 1),
-            ("mag_dec", "float32", 1),
-            ("x", "float32", 1),
-            ("y", "float32", 1),
-            ("z", "float32", 1),
+            ("energy", "float32"),
+            ("zenith", "float32"),
+            ("azimuth", "float32"),
+            ("lat", "float32"),
+            ("lon", "float32"),
+            ("ground", "float32"),
+            ("mag_str", "float32"),
+            ("mag_inc", "float32"),
+            ("mag_dec", "float32"),
+            ("x", "float32"),
+            ("y", "float32"),
+            ("z", "float32"),
             ("t", "float32", length),
             ("Ex", "float32", length),
             ("Ey", "float32", length),
