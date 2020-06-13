@@ -51,5 +51,7 @@ setup(
         "AIRES": "https://arxiv.org/abs/astro-ph/9911331",
         "ZHAireS": "https://arxiv.org/pdf/1107.1189.pdf",
     },
+    package_data={"zhaires": ["py.typed"]},
     include_package_data=True,
+    zip_safe=False
 )
