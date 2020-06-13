@@ -161,6 +161,13 @@ def load_properties(sim: str, directory: str = get_run_directory()) -> Dict[str,
                     float(energy_match.group(1)), energy_match.group(2)
                 )
 
+            # match for the primary particle
+            particle_match = re.search(r"\s*Primary particle: ([a-zA-Z]*)", line)
+
+            # if we got a match
+            if particle_match:
+                props["particle"] = particle_match.group(1).lower()  # type: ignore
+
             # and match for primary zenith
             zenith_match = re.search(r"\s*Primary zenith angle:\s*(\d+.\d+)", line)
 
@@ -174,6 +181,16 @@ def load_properties(sim: str, directory: str = get_run_directory()) -> Dict[str,
             # check for the azimuth match
             if azimuth_match:
                 props["azimuth"] = float(azimuth_match.group(1))
+
+            # and match for primary azimuth
+            lat_lon_match = re.search(
+                r"\s*\(Lat:\s*(-?\d+.\d+)\s*deg.\s*Long:\s*(-?\d+.\d+)", line
+            )
+
+            # check for the azimuth match
+            if lat_lon_match:
+                props["lat"] = float(lat_lon_match.group(1))
+                props["lon"] = float(lat_lon_match.group(2))
 
             # and match for primary ground
             ground_match = re.search(r"\s*Ground altitude:\s*(\d+.\d+)", line)
@@ -209,6 +226,40 @@ def load_properties(sim: str, directory: str = get_run_directory()) -> Dict[str,
             # check for an mag_dec match
             if mag_dec_match:
                 props["mag_dec"] = float(mag_dec_match.group(1))
+
+            # and extract the time bin size
+            dt_match = re.search(r"\s*Time bin size:\s*(-?\d+.\d+)ns", line)
+
+            # and check for a time_bin_size match
+            if dt_match:
+                props["dt"] = float(dt_match.group(1))
+
+            # and extract the index of refraction at sea level
+            rindex_match = re.search(
+                r"\s*Refraction index at sea level:(-?\d+.\d+)", line
+            )
+
+            # and check for a refractive index match
+            if rindex_match:
+                props["rindex"] = float(rindex_match.group(1))
+
+            # and extract the thinning
+            thinning_match = re.search(
+                r"\s*Thinning energy:\s*(\d+.\d+E-?\d+)", line
+            )
+
+            # and check for a thinning match
+            if thinning_match:
+                props["thinning"] = float(thinning_match.group(1))
+
+            # and extract the Xmax
+            xmax_match = re.search(
+                r"\s*Sl. depth of max. \(g/cm2\):\s*(\d+.\d+)", line
+            )
+
+            # and check for an xmax match
+            if xmax_match:
+                props["xmax"] = float(xmax_match.group(1))
 
     # and return the properties dict
     return props
