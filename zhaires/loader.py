@@ -244,18 +244,14 @@ def load_properties(sim: str, directory: str = get_run_directory()) -> Dict[str,
                 props["rindex"] = float(rindex_match.group(1))
 
             # and extract the thinning
-            thinning_match = re.search(
-                r"\s*Thinning energy:\s*(\d+.\d+E-?\d+)", line
-            )
+            thinning_match = re.search(r"\s*Thinning energy:\s*(\d+.\d+E-?\d+)", line)
 
             # and check for a thinning match
             if thinning_match:
                 props["thinning"] = float(thinning_match.group(1))
 
             # and extract the Xmax
-            xmax_match = re.search(
-                r"\s*Sl. depth of max. \(g/cm2\):\s*(\d+.\d+)", line
-            )
+            xmax_match = re.search(r"\s*Sl. depth of max. \(g/cm2\):\s*(\d+.\d+)", line)
 
             # and check for an xmax match
             if xmax_match:
