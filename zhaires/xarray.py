@@ -1,6 +1,8 @@
 """
 Load waveforms into XArray DataArray's and Datasets.
 """
+import os.path as op
+
 import numpy as np
 import xarray as xr
 
@@ -38,6 +40,13 @@ def load_waveforms(
     waveforms: xr.DataArray
         A multi-dimensional data array containing the loaded waveforms.
     """
+
+    # the path to the cache file
+    cachefile = op.join(directory, *(sim, f"{sim}.nc"))
+
+    # if the cache file exists, load it.
+    if op.exists(cachefile):
+        return xr.open_dataset(cachefile)
 
     # load the waveforms into a a structured NumPy array
     raw = loader.load_waveforms(sim, directory, write_cache=False)
@@ -97,6 +106,10 @@ def load_waveforms(
     # and save the properties into the array
     for k, v in props.items():
         dataset.attrs[k] = v
+
+    # if we want to write the cache, then write it to disk
+    if write_netcdf:
+        dataset.to_netcdf(path=cachefile, mode="w", format="NETCDF4")
 
     # and return the created dataset
     return dataset
