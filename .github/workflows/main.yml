@@ -29,10 +29,11 @@ jobs:
     - name: Install zhaires.py
       run: pip install -e ".[test]"
       env:
-        AIRES_RUN_DIR: ${GITHUB_WORKSPACE}      
+        AIRES_RUN_DIR: ${GITHUB_WORKSPACE}
+        RUNNING_ON_GITHUB: 1
       
     - name: Running pytest
       run: python -m pytest tests
       env:
         AIRES_RUN_DIR: ${GITHUB_WORKSPACE}
-        
+        RUNNING_ON_GITHUB: 1

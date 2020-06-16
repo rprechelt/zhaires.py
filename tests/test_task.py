@@ -1,3 +1,4 @@
+import os
 import zhaires
 
 
@@ -5,6 +6,13 @@ def test_run_task() -> None:
     """
     Check that I can create and run ZHAireS sims.
     """
+
+    # check if we are running under Github Actions
+    if os.getenv("RUNNING_ON_GITHUB") is not None:
+        return
+
+    # otherwise, try and run the simulation
+
     # create the simulation
     sim = zhaires.Task(directory="/tmp/")
 
