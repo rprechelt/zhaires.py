@@ -86,10 +86,18 @@ def load_waveforms(
         antidx = raw[1, :] == (iant + 1)
 
         # fill in the property information
-        for key, value in props.items():
-            if key == "injection":
-                continue
-            data[iant][key] = value
+        for key in [
+            "energy",
+            "zenith",
+            "azimuth",
+            "lat",
+            "lon",
+            "ground",
+            "mag_str",
+            "mag_inc",
+            "mag_dec",
+        ]:
+            data[iant][key] = props[key]
 
         # fill in the position and time
         data[iant]["x"] = raw[2, antidx][0]

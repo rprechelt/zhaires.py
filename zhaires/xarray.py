@@ -96,8 +96,29 @@ def load_waveforms(
         coords={"nant": np.arange(nant), "axis": ["x", "y", "z"]},
     )
 
-    # construct the dataset
-    dataset = xr.Dataset({"waveforms": waveforms, "locations": locations})
+    # the filename for the antenna files (if they exist)
+    antfile = op.join(directory, *(sim, "antenna_angles.dat"))
+
+    # if it exists, load it
+    if op.exists(antfile):
+        # load the raw data
+        raw_angles = np.loadtxt(antfile)
+
+        # and construct the data array
+        angles = xr.DataArray(
+            raw_angles[:, (3, 4, 5)],
+            dims=["nant", "coord"],
+            coords={"nant": np.arange(nant), "coord": ["theta", "phi", "D"]},
+        )
+
+        # and add it to the data array
+        dataset = xr.Dataset(
+            {"waveforms": waveforms, "locations": locations, "angles": angles}
+        )
+
+    else:  # we don't have an antenna angle file
+        # construct the dataset without the angles
+        dataset = xr.Dataset({"waveforms": waveforms, "locations": locations})
 
     # and save the simulation name and directory
     dataset.attrs["name"] = sim
