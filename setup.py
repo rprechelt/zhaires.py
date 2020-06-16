@@ -45,6 +45,7 @@ setup(
             "isort",
             "matplotlib",
         ],
+        "xarray": ["xarray",],
     },
     scripts=[],
     project_urls={
@@ -53,5 +54,5 @@ setup(
     },
     package_data={"zhaires": ["py.typed"]},
     include_package_data=True,
-    zip_safe=False
+    zip_safe=False,
 )
