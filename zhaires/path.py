@@ -21,7 +21,7 @@ def get_run_directory() -> str:
     envdir = os.getenv("AIRES_RUN_DIR")
 
     # if it's defined, use that. Else the CWD.
-    return envdir if envdir else "."
+    return envdir if envdir else os.getcwd()
 
 
 def exists(simname: str, directory: str = None) -> bool:
