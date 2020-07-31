@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict
+from typing import Mapping
 
 import numpy as np
 
@@ -118,7 +118,9 @@ def load_waveforms(
     return data
 
 
-def load_properties(sim: str, directory: str = get_run_directory()) -> Dict[str, float]:
+def load_properties(
+    sim: str, directory: str = get_run_directory()
+) -> Mapping[str, float]:
     """
     Load the various properties of the simulation into a dictionary.
 
