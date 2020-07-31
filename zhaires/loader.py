@@ -143,7 +143,7 @@ def load_properties(
     # a function to parse the ZHAireS energy
     def parse_energy(energy: float, unit: str) -> float:
         """
-        Parse an energy of the form "* *eV".
+        Parse an energy of the form "* *eV" into EeV.
         """
         if unit == "PeV":
             exponent = 15
@@ -152,7 +152,7 @@ def load_properties(
         elif unit == "ZeV":
             exponent = 21
 
-        return np.log10(energy * np.power(10.0, exponent))
+        return energy * np.power(10.0, exponent - 18)
 
     # open the file
     with open(os.path.join(directory, *(sim, f"{sim}.sry"))) as f:
