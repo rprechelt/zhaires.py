@@ -1,9 +1,9 @@
 import os
 import subprocess
-from shutil import which
 from typing import Optional, Tuple
 
 from .path import get_run_directory
+from .utils import find_aires
 
 
 class Task(object):
@@ -43,15 +43,7 @@ class Task(object):
         """
 
         # the program that we launch to control Aires
-        aires = program if program else which("Aires")
-
-        # if `aires` is None, we were not able to find Aires
-        if not aires:
-            raise SystemError(
-                "Unable to find `Aires` executable. "
-                "Ensure AIRES_DIR/bin is on your PATH or "
-                "pass an explicit `program` argument."
-            )
+        aires = program if program else find_aires()
 
         # check that `program` exists if it was provided
         if program:
