@@ -2,7 +2,7 @@ from os import path
 from setuptools import setup
 
 # the zhaires version
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 # get the absolute path of this project
 here = path.abspath(path.dirname(__file__))
@@ -33,7 +33,7 @@ setup(
     keywords=["cosmic", "ray", "air", "shower", "aires", "zhaires"],
     packages=["zhaires"],
     python_requires=">=3.6*, <4",
-    install_requires=["numpy",],
+    install_requires=["numpy", "xarray"],
     extras_require={
         "test": [
             "pytest",
@@ -45,7 +45,6 @@ setup(
             "isort",
             "matplotlib",
         ],
-        "xarray": ["xarray",],
     },
     scripts=[],
     project_urls={
