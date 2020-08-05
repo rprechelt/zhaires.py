@@ -10,7 +10,8 @@ def find_aires(suffix: str = "") -> str:
     """
     Try and find the Aires executable.
 
-    If `suffix` is defined, try and find Aires+`suffix`.
+    If `suffix` is defined, try and find aires+`suffix` (note
+    the use of lowercase aires when suffix is defined)
 
     If the program cannot be found, an exception is thrown.
 
@@ -31,13 +32,16 @@ def find_aires(suffix: str = "") -> str:
 
     """
 
-    # try and find it
-    executable = which("Aires"+suffix)
+    # try and find it (for suffixes, use lower case.)
+    if suffix != "":
+        executable = which("aires"+suffix)
+    else:
+        executable = which("Aires")
 
     # check that the executable exists
     if executable is None or not op.exists(executable):
         raise RuntimeError(
-            f"Unable to find `Aires{suffix}` executable. "
+            f"Unable to find `aires{suffix}` executable. "
             "Ensure AIRES_DIR/bin is on your PATH or "
             "explicitly provide the path."
         )

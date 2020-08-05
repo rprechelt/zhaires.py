@@ -104,7 +104,7 @@ def generate_table(
     """
 
     # find the AiresExport command
-    exportcmd = find_aires("Export")
+    exportcmd = find_aires(suffix="export")
 
     # construct the path to this simulation
     path = op.abspath(op.join(directory, sim))
