@@ -4,16 +4,17 @@ Load waveforms into XArray DataArray's and Datasets.
 import os.path as op
 
 import numpy as np
-import xarray as xr
 
+import xarray as xr
 import zhaires.loader as loader
+from xarray import Dataset
 
 from .path import get_run_directory
 
 
 def load_waveforms(
     sim: str, directory: str = get_run_directory(), write_netcdf: bool = True
-) -> xr.Dataset:
+) -> Dataset:
     """
     Load the ZHAireS antenna signals from simulation with name `sim`
     in the directory `directory` into a DataArray.
@@ -63,38 +64,49 @@ def load_waveforms(
     # and the length of each waveform
     length = raw["Ex"].shape[-1]
 
+    # compute the sampling period
+    dt = raw["t"][0, 1] - raw["t"][0, 0]
+
     # allocate the memory for the XArray
-    data = np.zeros((nant, npol + 1, length))
+    data = np.zeros((nant, npol, length))
 
     # fill in the data
     data[..., 0, :] = raw["Ex"]
     data[..., 1, :] = raw["Ey"]
     data[..., 2, :] = raw["Ez"]
-    data[..., 3, :] = raw["t"]
 
     # create the data array
     waveforms = xr.DataArray(
         data,
-        dims=["nant", "pol", "length"],
+        dims=["nant", "pol", "time"],
         coords={
             "nant": np.arange(nant),
-            "pol": ["Ex", "Ey", "Ez", "t"],
-            "length": np.arange(length),
+            "pol": ["Ex", "Ey", "Ez"],
+            "time": np.arange(length) * dt,
         },
     )
 
+    # set the units (and sampling period) for the waveforms
+    waveforms.attrs["units"] = "V/m"
+    waveforms.attrs["dt"] = dt
+    waveforms.time.attrs["units"] = "ns"
+
     # the antenna locations
-    antennas = np.zeros((nant, 3))
+    antennas = np.zeros((nant, 4))
     antennas[:, 0] = raw["x"]
     antennas[:, 1] = raw["y"]
     antennas[:, 2] = raw["z"]
+    antennas[:, 3] = raw["t"][:, 0]  # the start time for each waveform
 
     # construct the data array for the locations
     locations = xr.DataArray(
         antennas,
         dims=["nant", "axis"],
-        coords={"nant": np.arange(nant), "axis": ["x", "y", "z"]},
+        coords={"nant": np.arange(nant), "axis": ["x", "y", "z", "t0"]},
     )
+
+    # set the unit for the locations
+    locations.attrs["units"] = "m | ns"
 
     # the filename for the antenna files (if they exist)
     antfile = op.join(directory, *(sim, "antenna_angles.dat"))
@@ -111,14 +123,17 @@ def load_waveforms(
             coords={"nant": np.arange(nant), "coord": ["theta", "phi", "D"]},
         )
 
+        # and set the units for the angle array
+        angles.attrs["units"] = "deg | m"
+
         # and add it to the data array
-        dataset = xr.Dataset(
+        dataset = Dataset(
             {"waveforms": waveforms, "locations": locations, "angles": angles}
         )
 
     else:  # we don't have an antenna angle file
         # construct the dataset without the angles
-        dataset = xr.Dataset({"waveforms": waveforms, "locations": locations})
+        dataset = Dataset({"waveforms": waveforms, "locations": locations})
 
     # and save the simulation name and directory
     dataset.attrs["name"] = sim
