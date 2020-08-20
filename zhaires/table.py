@@ -60,6 +60,8 @@ def load_table(sim: str, table: int, directory: str = get_run_directory()) -> Da
         data = parse_lateral(raw)
     elif table_type == "energy":
         data = parse_energy(raw)
+    elif table_type == "ground":
+        data = parse_ground(raw)
     else:
         raise ValueError(f"Unknown table type: {table_type}")
 
@@ -136,6 +138,9 @@ def parse_table_type(filename: str) -> str:
         contents = f.read()[0:600]  # read the whole file and take 600
 
         # now match the contents of the line against regex
+
+        if re.search(r"TABLE 5", contents):
+            return "ground"
         if re.search(r"Longitudinal development: Energy", contents):
             return "energy"
         elif re.search(r"Longitudinal development:", contents):
@@ -149,7 +154,7 @@ def parse_table_type(filename: str) -> str:
         elif re.search(r"Energy distribution", contents):
             return "energy"
         else:
-            raise ValueError(f"Unknown table type.")
+            raise ValueError("Unknown table type.")
 
 
 def parse_lateral(data: np.ndarray) -> DataArray:
@@ -174,6 +179,31 @@ def parse_lateral(data: np.ndarray) -> DataArray:
             "level": np.arange(data.shape[0]),
             "quantity": ["R", "mean", "rms", "stdev", "min", "max"],
         },
+    )
+
+    # and we are done
+    return table
+
+
+def parse_ground(data: np.ndarray) -> DataArray:
+    """
+    Parse raw data into ground table.
+
+    Parameters
+    ----------
+    data: np.ndarray
+        The raw data for a energy table.
+
+    Returns
+    -------
+    table: DataArray
+        The created xarray.DataArray
+    """
+    # load the data table into an XArray
+    table = DataArray(
+        data[1:],
+        dims=["quantity"],
+        coords={"quantity": ["number", "energy", "entries"]},
     )
 
     # and we are done

@@ -33,7 +33,7 @@ setup(
     keywords=["cosmic", "ray", "air", "shower", "aires", "zhaires"],
     packages=["zhaires"],
     python_requires=">=3.6*, <4",
-    install_requires=["numpy", "xarray"],
+    install_requires=["numpy", "xarray", "scipy"],
     extras_require={
         "test": [
             "pytest",
