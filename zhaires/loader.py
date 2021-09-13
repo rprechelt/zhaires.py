@@ -231,7 +231,7 @@ def load_properties(
                 props["mag_inc"] = float(mag_inc_match.group(1))
 
             # and extract the magnetic mag_dec
-            mag_dec_match = re.search(r"D:\s*(\d+.\d+) deg", line)
+            mag_dec_match = re.search(r"D:\s*(-?\d+.\d+) deg", line)
 
             # check for an mag_dec match
             if mag_dec_match:
