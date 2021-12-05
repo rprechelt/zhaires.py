@@ -34,7 +34,7 @@ def find_aires(suffix: str = "") -> str:
 
     # try and find it (for suffixes, use lower case.)
     if suffix != "":
-        executable = which("aires"+suffix)
+        executable = which("aires" + suffix)
     else:
         executable = which("Aires")
 

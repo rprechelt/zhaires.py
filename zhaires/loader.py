@@ -1,6 +1,5 @@
 import os
 import re
-import pandas as pd
 from typing import Mapping
 
 import numpy as np
@@ -271,22 +270,31 @@ def load_properties(
             # and check for an xmax match
             if xmax_match:
                 props["xmax"] = float(xmax_match.group(1))
-                
+
             # extract antenna positions
-            if antenna_start and not(antenna_end):
+            if antenna_start and not (antenna_end):
                 values = line.split()
-                if len(values)!=0:
+                if len(values) != 0:
                     if values[0].isdigit():
-                        antenna_positions.append([int(values[0]),float(values[1]),float(values[2]),float(values[3]),float(values[4])])
-            if "Antenna|   X [m]   |   Y [m]   |   Z [m]   |  t0 [ns]" in  line:
-            	antenna_start = True
+                        antenna_positions.append(
+                            [
+                                int(values[0]),
+                                float(values[1]),
+                                float(values[2]),
+                                float(values[3]),
+                                float(values[4]),
+                            ]
+                        )
+            if "Antenna|   X [m]   |   Y [m]   |   Z [m]   |  t0 [ns]" in line:
+                antenna_start = True
             elif "Time bin size:" in line:
-            	antenna_end = True
+                antenna_end = True
     antenna_positions = np.array(antenna_positions)
     props["antenna_positions"] = antenna_positions
-    
+
     # and return the properties dict
     return props
+
 
 def __pad_or_cut(arr: np.ndarray, length: np.ndarray) -> np.ndarray:
     """

@@ -12,6 +12,7 @@ from xarray import Dataset
 
 from .path import get_run_directory
 
+
 def trim_dataset(sim: Dataset, trim: Tuple[float, float]) -> Dataset:
     """
     Trim the waveforms in a dataset to a region around the peak.
@@ -54,7 +55,6 @@ def trim_dataset(sim: Dataset, trim: Tuple[float, float]) -> Dataset:
 
     # create a zeroed out array of the right size
     new = sim.isel(time=slice(0, N))
-
 
 
 def resample_waveforms(sim: Dataset, fs: float, method: str = "cubic") -> Dataset:
@@ -130,7 +130,7 @@ def load_waveforms(
         If not None, trim the waveform to (before, after) ns after the peak in the absolute value.
     **kwargs:
         Any additional arguments are passed to 'resample_waveforms'
-    
+
     Returns
     -------
     waveforms: xr.DataArray
